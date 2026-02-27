@@ -1,66 +1,73 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+import { useEffect, useState } from "react";
 
 export default function Home() {
+  const API_URL = "https://5mnj5uder5.execute-api.ap-south-1.amazonaws.com";
+
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [notes, setNotes] = useState([]);
+
+  const fetchNotes = async () => {
+    const res = await fetch(`${API_URL}/notes`);
+    const data = await res.json();
+    setNotes(data);
+  };
+
+  const addNote = async () => {
+    await fetch(`${API_URL}/notes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, content }),
+    });
+
+    setTitle("");
+    setContent("");
+    fetchNotes();
+  };
+
+  const deleteNote = async (id) => {
+    await fetch(`${API_URL}/notes?id=${id}`, {
+      method: "DELETE",
+    });
+
+    fetchNotes();
+  };
+
+  useEffect(() => {
+    fetchNotes();
+  }, []);
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div style={{ padding: 40 }}>
+      <h1>Smart Notes Manager</h1>
+
+      <input
+        placeholder="Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
+      <br /><br />
+
+      <textarea
+        placeholder="Content"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+      />
+      <br /><br />
+
+      <button onClick={addNote}>Add Note</button>
+
+      <hr />
+
+      {notes.map((note) => (
+        <div key={note.id}>
+          <h3>{note.title}</h3>
+          <p>{note.content}</p>
+          <button onClick={() => deleteNote(note.id)}>Delete</button>
+          <hr />
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      ))}
     </div>
   );
 }
